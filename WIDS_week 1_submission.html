@@ -5,7 +5,100 @@ import numpy as np
 df = pd.read_csv('Chess.csv')
 
 #step 1 
-
 hg = df.sort_values(['ELO'], ascending=[0])
 print("player stats with the highest Elo:")
 print(hg[['Name','ELO']].head(1))
+
+#step 2
+hg_10 = hg.drop_duplicates(subset='Name')
+print(hg_10[['Name', 'ELO']].head(10))
+
+#step 3
+df['Year'] = df['Date'].str[:4].astype(int) 
+average_elo_per_year = []
+for year in df['Year'].unique():
+    df_year = df[df['Year'] == year]
+    top_10_that_year = df_year[0:10]
+    avg_elo = top_10_that_year['ELO'].mean()
+    print(avg_elo)
+    average_elo_per_year.append((year, avg_elo))
+average_elo_df = pd.DataFrame(average_elo_per_year, columns=['Year', 'Average Elo'])
+plt.figure(figsize=(10, 6))
+plt.plot(average_elo_df['Year'], average_elo_df['Average Elo'], marker='o')
+plt.title('Time Trend of Top 10 Players\' Average Elo Each Year')
+plt.xlabel('Year')
+plt.ylabel('Average Elo')
+plt.grid(True)
+plt.show()
+
+#step 4
+def count_players_above_threshold(data, threshold=2750):
+    return (
+        data[data['ELO'] > threshold]
+        .groupby('Year')['Name']
+        .nunique()
+    )
+players_above_2750 = count_players_above_threshold(data)
+plt.figure(figsize=(12, 6))
+plt.plot(players_above_2750.index, players_above_2750.values, marker='o', color='orange', label='Players Above 2750 Elo')
+plt.title("Time Trend for Number of Players Above 2750 Elo")
+plt.xlabel("Year")
+plt.ylabel("Number of Players")
+plt.grid()
+plt.legend()
+plt.show()
+
+# step 5
+df['Year'] = df['Date'].str[:4].astype(int) 
+average_age_per_year = []
+for year in df['Year'].unique():
+    df_year = df[df['Year'] == year]
+    top_10_that_year = df_year[0:10]
+    avg_age = top_10_that_year['Age'].mean()
+    print(avg_age)
+    average_age_per_year.append((year, avg_age))
+average_age_df = pd.DataFrame(average_age_per_year, columns=['Year', 'Average age'])
+plt.figure(figsize=(10, 6))
+plt.plot(average_age_df['Year'], average_age_df['Average age'], marker='o')
+plt.title('Time Trend of Top 10 Players\' Average age Each Year')
+plt.xlabel('Year')
+plt.ylabel('Average age')
+plt.grid(True)
+plt.show()
+
+#step 6
+def count_players_under_age(data, age_limit=25, top_n=10):
+    yearly_age = (
+        data.groupby(['Year', 'Name'])[['ELO', 'Age']]
+        .max()
+        .reset_index()
+        .sort_values(by=['Year', 'ELO'], ascending=[True, False])
+    )
+    yearly_age = yearly_age.groupby('Year').head(top_n)
+    return (yearly_age[yearly_age['Age'] < age_limit]
+            .groupby('Year')['Name']
+            .nunique())
+players_under_25 = count_players_under_age(data)
+plt.figure(figsize=(12, 6))
+plt.plot(players_under_25.index, players_under_25.values, marker='o', color='red', label='Players Under 25 in Top 10')
+plt.title("Time Trend for Number of Players Under 25 Years Old in Top 10")
+plt.xlabel("Year")
+plt.ylabel("Number of Players")
+plt.grid()
+plt.legend()
+plt.show()
+
+#step 7
+def track_player_elo(data, player_name):
+    return data[data['Name'] == player_name].groupby('Year')['ELO'].mean()
+
+magnus_elo_trend = track_player_elo(data, 'Carlsen')
+
+plt.figure(figsize=(12, 6))
+plt.plot(magnus_elo_trend.index, magnus_elo_trend.values, marker='o', color='purple', label="Magnus Carlsen's ELO")
+plt.title("Time Trend of Magnus Carlsen's ELO")
+plt.xlabel("Year")
+plt.ylabel("ELO")
+plt.grid()
+plt.legend()
+plt.show()
